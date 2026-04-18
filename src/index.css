@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500&display=swap');
+
+@theme {
+  --color-bg: #f8fafc;
+  --color-surface: rgba(255, 255, 255, 0.85);
+  --color-surface-hover: rgba(255, 255, 255, 0.95);
+  --color-border: rgba(255, 255, 255, 0.5);
+  --color-accent: #2563eb;
+  --color-accent-light: #dbeafe;
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --radius-card: 20px;
+  --radius-button: 12px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: #0f172a;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root { min-height: 100svh; }
+
+::selection {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+input::placeholder, textarea::placeholder {
+  color: #94a3b8;
+}
+
+:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.4);
+  outline-offset: 2px;
+}
+
+/* Smooth scrollbar */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.3); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.5); }
