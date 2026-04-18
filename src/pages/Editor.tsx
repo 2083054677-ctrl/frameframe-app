@@ -1,31 +1,33 @@
 import { useState, useCallback, useEffect } from 'react'
 import { Plus, Trash2, Film, Download, Home, Clock, Settings, ImageIcon, Loader2, User, ChevronUp, ChevronDown } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import FrameDetailPanel from '../components/editor/FrameDetailPanel'
+import { getProject, saveProject, createFrame } from '../lib/store'
+import { LABEL_COLORS, LABEL_TEXT, PLATFORMS } from '../lib/constants'
 import { MOCK_PROJECT } from '../data/mock'
 import { generateFrameImage } from '../lib/image'
 import { isConfigured } from '../lib/config'
 import type { Frame } from '../types'
 
-const LABEL_COLORS: Record<string, string> = {
-  hook: 'bg-orange-100 text-orange-600',
-  feature: 'bg-blue-100 text-blue-600',
-  benefit: 'bg-emerald-100 text-emerald-600',
-  'social-proof': 'bg-amber-100 text-amber-600',
-  cta: 'bg-rose-100 text-rose-600',
-}
-const LABEL_TEXT: Record<string, string> = {
-  hook: 'Hook', feature: '展示', benefit: '卖点', 'social-proof': '证言', cta: 'CTA',
-}
 
 export default function Editor() {
   const navigate = useNavigate()
-  const [frames, setFrames] = useState<Frame[]>(MOCK_PROJECT.frames)
+  const { id } = useParams<{ id: string }>()
+  const project = (id ? getProject(id) : null) ?? MOCK_PROJECT
+  const [frames, setFrames] = useState<Frame[]>(project.frames)
   const [selectedId, setSelectedId] = useState<string>(frames[0]?.id || '')
+
+  // Auto-save to store when frames change
+  useEffect(() => {
+    if (id && id !== 'demo') {
+      saveProject({ ...project, frames })
+    }
+  }, [frames, id])
 
   const selectedFrame = frames.find(f => f.id === selectedId)
   const selectedIndex = frames.findIndex(f => f.id === selectedId)
   const totalDuration = frames.reduce((sum, f) => sum + f.duration, 0)
+  const platformLabel = PLATFORMS.find(p => p.id === project.platform)?.label ?? project.platform
 
   // Keyboard navigation
   useEffect(() => {
@@ -65,8 +67,8 @@ export default function Editor() {
     try {
       const url = await generateFrameImage({
         frame,
-        productName: MOCK_PROJECT.name,
-        style: MOCK_PROJECT.style || '商业摄影',
+        productName: project.name,
+        style: project.style || '商业摄影',
       })
       updateFrame(id, { imageStatus: 'done', imageUrl: url })
     } catch (err) {
@@ -77,14 +79,7 @@ export default function Editor() {
   }, [frames, updateFrame])
 
   const addFrame = () => {
-    const nf: Frame = {
-      id: `f${Date.now()}`, sortOrder: frames.length, duration: 2,
-      shotType: 'medium', content: '新镜头', action: '',
-      cameraMovement: 'static', screenText: null, voiceover: null,
-      soundEffect: null, transition: 'cut', frameLabel: 'feature',
-      imagePrompt: null, imageUrl: null, imageStatus: 'pending',
-      videoClipUrl: null, videoStatus: 'pending',
-    }
+    const nf = createFrame({ sortOrder: frames.length, content: '新镜头' })
     setFrames(prev => [...prev, nf])
     setSelectedId(nf.id)
   }
@@ -133,7 +128,7 @@ export default function Editor() {
 
         <div className="mx-3 mb-3 rounded-xl border border-slate-100 bg-slate-50 p-4">
           <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">当前项目</p>
-          <p className="mt-1 font-[Plus_Jakarta_Sans] text-[15px] font-semibold text-slate-700">{MOCK_PROJECT.name}</p>
+          <p className="mt-1 font-[Plus_Jakarta_Sans] text-[15px] font-semibold text-slate-700">{project.name}</p>
           <p className="mt-0.5 text-[13px] text-slate-400">{frames.length} 帧 · {totalDuration.toFixed(1)}s</p>
         </div>
 
@@ -156,9 +151,9 @@ export default function Editor() {
         {/* Top bar */}
         <header className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-3">
           <div className="flex items-center gap-3">
-            <h1 className="font-[Plus_Jakarta_Sans] text-[16px] font-bold text-slate-800">{MOCK_PROJECT.name}</h1>
+            <h1 className="font-[Plus_Jakarta_Sans] text-[16px] font-bold text-slate-800">{project.name}</h1>
             <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-[12px] font-medium text-blue-600">
-              {MOCK_PROJECT.platform === 'douyin' ? '抖音' : MOCK_PROJECT.platform}
+              {platformLabel}
             </span>
             <span className="text-[12px] text-slate-400">{frames.length} 帧 · {totalDuration.toFixed(1)}s</span>
           </div>
@@ -166,7 +161,7 @@ export default function Editor() {
             <button className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-[14px] font-semibold text-slate-600 transition-all hover:bg-slate-50 hover:shadow-sm">
               <Film size={16} /> 生成视频
             </button>
-            <button onClick={() => navigate(`/project/${MOCK_PROJECT.id}/export`)}
+            <button onClick={() => navigate(`/project/${project.id}/export`)}
                className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2 text-[14px] font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-md">
               <Download size={16} /> 导出
             </button>

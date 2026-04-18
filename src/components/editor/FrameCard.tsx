@@ -1,17 +1,6 @@
 import { ImageIcon, Loader2 } from 'lucide-react'
+import { LABEL_COLORS, LABEL_TEXT } from '../../lib/constants'
 import type { Frame } from '../../types'
-
-const LABEL_COLORS: Record<string, string> = {
-  hook: 'bg-orange-100 text-orange-600',
-  feature: 'bg-blue-100 text-blue-600',
-  benefit: 'bg-emerald-100 text-emerald-600',
-  'social-proof': 'bg-amber-100 text-amber-600',
-  cta: 'bg-rose-100 text-rose-600',
-}
-
-const LABEL_TEXT: Record<string, string> = {
-  hook: 'Hook', feature: '展示', benefit: '卖点', 'social-proof': '证言', cta: 'CTA',
-}
 
 interface FrameCardProps {
   frame: Frame

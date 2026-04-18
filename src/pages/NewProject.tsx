@@ -1,24 +1,12 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Upload, X, Plus, ArrowRight, ArrowLeft, Check, Sparkles } from 'lucide-react'
+import { Upload, X, Plus, ArrowRight, ArrowLeft, Check, Sparkles, Loader2 } from 'lucide-react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import AppShell from '../components/AppShell'
+import { generateScript } from '../lib/llm'
+import { isConfigured } from '../lib/config'
+import { saveProject, generateId } from '../lib/store'
+import { STYLES, DURATIONS, PLATFORMS } from '../lib/constants'
 
-const STYLES = [
-  { id: 'product-showcase', label: '产品展示', desc: '突出外观与细节' },
-  { id: 'use-scene', label: '使用场景', desc: '真实场景演示' },
-  { id: 'pain-point', label: '痛点解决', desc: '先戳痛点再给方案' },
-]
-const DURATIONS = [
-  { value: 4, label: '4s', desc: '超短' },
-  { value: 8, label: '8s', desc: '标准' },
-  { value: 15, label: '15s', desc: '完整' },
-]
-const PLATFORMS = [
-  { id: 'douyin', label: '抖音' },
-  { id: 'xiaohongshu', label: '小红书' },
-  { id: 'kuaishou', label: '快手' },
-  { id: 'taobao', label: '淘宝主图' },
-]
 
 const TOTAL_STEPS = 3
 
@@ -38,6 +26,10 @@ export default function NewProject() {
   const [style, setStyle] = useState('product-showcase')
   const [duration, setDuration] = useState(8)
   const [platform, setPlatform] = useState<string | null>(null)
+
+  // Generation state
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Prefill from Landing query (run once)
   useEffect(() => {
@@ -65,8 +57,41 @@ export default function NewProject() {
   }, [addImages])
 
   const canNext1 = name.trim().length > 0
-  const canNext2 = true // step 2 has sensible defaults
-  const canSubmit = canNext1
+
+  const handleGenerate = async () => {
+    if (!isConfigured('llm')) {
+      setError('请先在设置中配置 LLM API Key')
+      return
+    }
+    setGenerating(true)
+    setError(null)
+    try {
+      const sellingPoints = points.filter(p => p.trim())
+      const frames = await generateScript({
+        productName: name.trim(),
+        sellingPoints: sellingPoints.length > 0 ? sellingPoints : [name.trim()],
+        style,
+        duration,
+        platform,
+      })
+      const projectId = generateId()
+      saveProject({
+        id: projectId,
+        name: name.trim(),
+        sellingPoints,
+        style,
+        duration,
+        platform,
+        status: 'script_ready',
+        frames,
+      })
+      navigate(`/project/${projectId}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '生成失败，请重试')
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   const inputCls = "w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 font-[Inter] text-[14px] text-slate-700 outline-none transition-all focus:border-blue-300 focus:bg-white focus:ring-2 focus:ring-blue-100"
 
@@ -263,13 +288,19 @@ export default function NewProject() {
                 </div>
               </div>
             </div>
+
+            {error && (
+              <div className="rounded-2xl border border-red-100 bg-red-50/50 p-4">
+                <p className="text-[13px] text-red-600">{error}</p>
+              </div>
+            )}
           </div>
         )}
 
         {/* Navigation buttons */}
         <div className="mt-8 flex items-center justify-between">
           {step > 1 ? (
-            <button onClick={() => setStep(step - 1)}
+            <button onClick={() => setStep(step - 1)} disabled={generating}
                     className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 font-[Plus_Jakarta_Sans] text-[13px] font-semibold text-slate-600 transition-all hover:bg-slate-50">
               <ArrowLeft size={14} /> 上一步
             </button>
@@ -282,10 +313,11 @@ export default function NewProject() {
               下一步 <ArrowRight size={14} />
             </button>
           ) : (
-            <button onClick={() => canSubmit && navigate('/project/demo')}
-                    disabled={!canSubmit}
+            <button onClick={handleGenerate}
+                    disabled={!canNext1 || generating}
                     className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 font-[Plus_Jakarta_Sans] text-[14px] font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-lg disabled:opacity-25 disabled:shadow-none">
-              <Sparkles size={15} /> 生成分镜方案
+              {generating ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+              {generating ? '生成中...' : '生成分镜方案'}
             </button>
           )}
         </div>

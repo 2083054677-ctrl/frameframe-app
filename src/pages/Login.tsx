@@ -1,21 +1,35 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ArrowRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import MeshBackground from '../components/MeshBackground'
 
 type AuthMode = 'phone' | 'email'
 
 export default function Login() {
+  const navigate = useNavigate()
   const [mode, setMode] = useState<AuthMode>('phone')
   const [value, setValue] = useState('')
   const [code, setCode] = useState('')
   const [countdown, setCountdown] = useState(0)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+    }
+  }, [])
 
   const sendCode = () => {
     if (!value.trim()) return
+    if (timerRef.current) clearInterval(timerRef.current)
     setCountdown(60)
-    const timer = setInterval(() => {
+    timerRef.current = setInterval(() => {
       setCountdown(prev => {
-        if (prev <= 1) { clearInterval(timer); return 0 }
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current)
+          timerRef.current = null
+          return 0
+        }
         return prev - 1
       })
     }, 1000)
@@ -23,7 +37,7 @@ export default function Login() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    window.location.href = '/new'
+    navigate('/new')
   }
 
   const inputCls = "w-full rounded-xl border border-slate-200 bg-white/80 px-4 py-3 font-[Inter] text-[14px] text-slate-700 outline-none transition-all focus:border-blue-300 focus:bg-white focus:ring-2 focus:ring-blue-100"

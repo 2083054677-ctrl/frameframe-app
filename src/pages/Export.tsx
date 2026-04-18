@@ -1,13 +1,18 @@
 import { useState } from 'react'
 import { Download, FileText, Image as ImageIcon, Film, Copy, Check, CheckCircle2 } from 'lucide-react'
+import { useParams } from 'react-router-dom'
 import AppShell from '../components/AppShell'
+import { getProject } from '../lib/store'
+import { PLATFORMS } from '../lib/constants'
 import { MOCK_PROJECT } from '../data/mock'
 
 export default function Export() {
+  const { id } = useParams<{ id: string }>()
+  const project = (id ? getProject(id) : null) ?? MOCK_PROJECT
   const [copied, setCopied] = useState(false)
 
   const copyScript = () => {
-    const script = MOCK_PROJECT.frames.map((f, i) =>
+    const script = project.frames.map((f, i) =>
       `【镜头 ${i + 1}】${f.duration}s | ${f.shotType} | ${f.cameraMovement}\n画面：${f.content}\n文案：${f.screenText || '—'}\n旁白：${f.voiceover || '—'}`
     ).join('\n\n')
     navigator.clipboard.writeText(script)
@@ -15,14 +20,17 @@ export default function Export() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  const hasImages = project.frames.some(f => f.imageUrl)
+  const platformLabel = PLATFORMS.find(p => p.id === project.platform)?.label ?? project.platform
+
   const exports = [
     { icon: Film, label: '视频 MP4', desc: '完整短视频成片', action: '下载视频', ready: false, primary: true },
-    { icon: ImageIcon, label: '分镜图包', desc: `${MOCK_PROJECT.frames.length} 张参考图`, action: '下载图包', ready: true, primary: false },
+    { icon: ImageIcon, label: '分镜图包', desc: `${project.frames.length} 张参考图`, action: '下载图包', ready: hasImages, primary: false },
     { icon: FileText, label: '脚本文档', desc: '完整拍摄脚本', action: '下载脚本', ready: true, primary: false },
   ]
 
   return (
-    <AppShell title="导出" backHref={`/project/${MOCK_PROJECT.id}`}>
+    <AppShell title="导出" backHref={`/project/${project.id}`}>
       <div className="mx-auto max-w-xl px-6 py-8">
 
         {/* Success header */}
@@ -31,12 +39,12 @@ export default function Export() {
           <div>
             <p className="font-[Plus_Jakarta_Sans] text-[14px] font-bold text-emerald-700">分镜方案已就绪</p>
             <p className="mt-0.5 text-[12px] text-emerald-500">
-              {MOCK_PROJECT.frames.length} 帧 · {MOCK_PROJECT.duration}s · {MOCK_PROJECT.platform === 'douyin' ? '抖音竖版' : MOCK_PROJECT.platform}
+              {project.frames.length} 帧 · {project.duration}s · {platformLabel}
             </p>
           </div>
         </div>
 
-        <h1 className="font-[Plus_Jakarta_Sans] text-2xl font-bold text-slate-800">{MOCK_PROJECT.name}</h1>
+        <h1 className="font-[Plus_Jakarta_Sans] text-2xl font-bold text-slate-800">{project.name}</h1>
         <p className="mt-1 font-[Inter] text-[13px] text-slate-500">选择导出格式</p>
 
         <div className="mt-6 space-y-2">
@@ -76,7 +84,7 @@ export default function Export() {
         <div className="mt-4 rounded-2xl border border-slate-100 bg-white/80 p-5 shadow-sm">
           <p className="mb-3 font-[Plus_Jakarta_Sans] text-[10px] font-semibold uppercase tracking-wider text-slate-400">脚本预览</p>
           <div className="space-y-3">
-            {MOCK_PROJECT.frames.map((f, i) => (
+            {project.frames.map((f, i) => (
               <div key={f.id} className="border-l-2 border-slate-200 pl-3">
                 <p className="font-[Plus_Jakarta_Sans] text-[11px] font-semibold text-slate-600">
                   镜头 {i + 1} · {f.duration}s · {f.shotType}

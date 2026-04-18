@@ -5,25 +5,16 @@
  * 支持 OpenAI 兼容接口（Claude/GPT/Deepseek 等）。
  */
 
+export interface APISection {
+  baseUrl: string
+  apiKey: string
+  model: string
+}
+
 export interface APIConfig {
-  // LLM — 用于生成分镜脚本
-  llm: {
-    baseUrl: string
-    apiKey: string
-    model: string
-  }
-  // Image — 用于生成分镜参考图
-  image: {
-    baseUrl: string
-    apiKey: string
-    model: string
-  }
-  // Video — 用于生成视频片段
-  video: {
-    baseUrl: string
-    apiKey: string
-    model: string
-  }
+  llm: APISection
+  image: APISection
+  video: APISection
 }
 
 const STORAGE_KEY = 'frameframe-api-config'
@@ -50,7 +41,12 @@ export function getConfig(): APIConfig {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return DEFAULT_CONFIG
-    return { ...DEFAULT_CONFIG, ...JSON.parse(raw) }
+    const saved = JSON.parse(raw)
+    return {
+      llm: { ...DEFAULT_CONFIG.llm, ...saved.llm },
+      image: { ...DEFAULT_CONFIG.image, ...saved.image },
+      video: { ...DEFAULT_CONFIG.video, ...saved.video },
+    }
   } catch {
     return DEFAULT_CONFIG
   }

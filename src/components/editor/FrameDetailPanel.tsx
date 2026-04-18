@@ -1,18 +1,7 @@
 import { useState } from 'react'
 import { RefreshCw, ImageIcon, Loader2, ChevronDown, Sparkles } from 'lucide-react'
+import { LABEL_DESCRIPTIONS, SHOT_TYPES, CAMERA_MOVES, TRANSITIONS } from '../../lib/constants'
 import type { Frame } from '../../types'
-
-const LABEL_MAP: Record<string, string> = {
-  hook: 'Hook — 开场抓住注意力',
-  feature: '展示 — 展示产品/场景',
-  benefit: '卖点 — 突出核心优势',
-  'social-proof': '证言 — 用户评价',
-  cta: 'CTA — 引导行动',
-}
-
-const SHOT_TYPES = ['close-up', 'medium', 'wide', 'detail', 'overhead', 'pov']
-const CAMERA_MOVES = ['static', 'pan-left', 'pan-right', 'zoom-in', 'zoom-out', 'tracking']
-const TRANSITIONS = ['cut', 'fade', 'dissolve']
 
 interface Props {
   frame: Frame
@@ -47,7 +36,7 @@ export default function FrameDetailPanel({ frame, frameIndex, totalFrames, onUpd
             <p className="font-[Plus_Jakarta_Sans] text-[11px] font-semibold uppercase tracking-wider text-slate-400">这一帧的作用</p>
           </div>
           <p className="mt-1 font-[Plus_Jakarta_Sans] text-[15px] font-semibold text-slate-700">
-            {LABEL_MAP[frame.frameLabel] || frame.frameLabel}
+            {LABEL_DESCRIPTIONS[frame.frameLabel] || frame.frameLabel}
           </p>
         </div>
 
