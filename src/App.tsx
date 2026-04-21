@@ -1,5 +1,5 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom'
+import { HashRouter, Routes, Route, Link } from 'react-router-dom'
 import Landing from './pages/Landing'
 import Login from './pages/Login'
 import NewProject from './pages/NewProject'
@@ -49,7 +49,7 @@ function NotFound() {
 function App() {
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
@@ -59,7 +59,7 @@ function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </ErrorBoundary>
   )
 }
